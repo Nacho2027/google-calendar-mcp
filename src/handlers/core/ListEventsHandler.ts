@@ -16,12 +16,28 @@ interface ListEventsArgs {
   timeMin?: string;
   timeMax?: string;
   timeZone?: string;
+  access_token: string;
+  refresh_token?: string;
+  client_id: string;
+  client_secret: string;
 }
 
 export class ListEventsHandler extends BaseToolHandler {
-    async runTool(args: ListEventsArgs, oauth2Client: OAuth2Client): Promise<CallToolResult> {
+    async runTool(args: ListEventsArgs, oauth2Client: OAuth2Client | null = null): Promise<CallToolResult> {
         // MCP SDK has already validated the arguments against the tool schema
         const validArgs = args;
+        
+        // Create OAuth2Client from provided tokens (stateless)
+        const oAuth2Client = new OAuth2Client(
+            validArgs.client_id,
+            validArgs.client_secret
+        );
+        
+        // Set credentials from provided tokens
+        oAuth2Client.setCredentials({
+            access_token: validArgs.access_token,
+            refresh_token: validArgs.refresh_token
+        });
         
         // Normalize calendarId to always be an array for consistent processing
         // The Zod schema transform has already handled JSON string parsing if needed
@@ -29,7 +45,7 @@ export class ListEventsHandler extends BaseToolHandler {
             ? validArgs.calendarId 
             : [validArgs.calendarId];
         
-        const allEvents = await this.fetchEvents(oauth2Client, calendarIds, {
+        const allEvents = await this.fetchEvents(oAuth2Client, calendarIds, {
             timeMin: validArgs.timeMin,
             timeMax: validArgs.timeMax,
             timeZone: validArgs.timeZone

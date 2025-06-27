@@ -22,28 +22,14 @@ const buildOptions = {
   sourcemap: true,
 };
 
-/** @type {import('esbuild').BuildOptions} */
-const authServerBuildOptions = {
-  entryPoints: [join(__dirname, '../src/auth-server.ts')],
-  bundle: true,
-  platform: 'node',
-  target: 'node18',
-  outfile: join(__dirname, '../build/auth-server.js'),
-  format: 'esm',
-  packages: 'external', // Don't bundle node_modules
-  sourcemap: true,
-};
+// Multi-user server and auth server removed for OAuth Token Injection Architecture
 
 if (isWatch) {
   const context = await esbuild.context(buildOptions);
-  const authContext = await esbuild.context(authServerBuildOptions);
-  await Promise.all([context.watch(), authContext.watch()]);
+  await context.watch();
   process.stderr.write('Watching for changes...\n');
 } else {
-  await Promise.all([
-    esbuild.build(buildOptions),
-    esbuild.build(authServerBuildOptions)
-  ]);
+  await esbuild.build(buildOptions);
   
   // Make the file executable on non-Windows platforms
   if (process.platform !== 'win32') {

@@ -2,18 +2,25 @@ import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { OAuth2Client } from "google-auth-library";
 import { BaseToolHandler } from "./BaseToolHandler.js";
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
-import { GetCurrentTimeInput } from "../../tools/registry.js";
+
+interface GetCurrentTimeArgs {
+  timeZone?: string;
+  // OAuth credentials (not used for this handler but required for schema consistency)
+  access_token: string;
+  refresh_token?: string;
+  client_id: string;
+  client_secret: string;
+}
 
 export class GetCurrentTimeHandler extends BaseToolHandler {
-    async runTool(args: any, _oauth2Client: OAuth2Client): Promise<CallToolResult> {
-        // Validate arguments using schema
-        const validArgs = args as GetCurrentTimeInput;
+    async runTool(args: GetCurrentTimeArgs, _oauth2Client: OAuth2Client | null = null): Promise<CallToolResult> {
+        // Note: This handler doesn't use OAuth credentials, it just returns time information
         
         const now = new Date();
         
         // If no timezone provided, return UTC and system timezone info
         // This is safer for HTTP mode where server timezone may not match user
-        const requestedTimeZone = validArgs.timeZone;
+        const requestedTimeZone = args.timeZone;
         const systemTimeZone = this.getSystemTimeZone();
         
         let result: any;

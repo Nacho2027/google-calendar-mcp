@@ -1,15 +1,37 @@
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { OAuth2Client } from "google-auth-library";
-import { SearchEventsInput } from "../../tools/registry.js";
 import { BaseToolHandler } from "./BaseToolHandler.js";
 import { calendar_v3 } from 'googleapis';
 import { formatEventWithDetails } from "../utils.js";
 import { convertToRFC3339 } from "../utils/datetime.js";
 
+interface SearchEventsArgs {
+  calendarId: string;
+  query: string;
+  timeMin: string;
+  timeMax: string;
+  timeZone?: string;
+  access_token: string;
+  refresh_token?: string;
+  client_id: string;
+  client_secret: string;
+}
+
 export class SearchEventsHandler extends BaseToolHandler {
-    async runTool(args: any, oauth2Client: OAuth2Client): Promise<CallToolResult> {
-        const validArgs = args as SearchEventsInput;
-        const events = await this.searchEvents(oauth2Client, validArgs);
+    async runTool(args: SearchEventsArgs, oauth2Client: OAuth2Client | null = null): Promise<CallToolResult> {
+        // Create OAuth2Client from provided tokens (stateless)
+        const oAuth2Client = new OAuth2Client(
+            args.client_id,
+            args.client_secret
+        );
+        
+        // Set credentials from provided tokens
+        oAuth2Client.setCredentials({
+            access_token: args.access_token,
+            refresh_token: args.refresh_token
+        });
+        
+        const events = await this.searchEvents(oAuth2Client, args);
         
         if (events.length === 0) {
             return {
@@ -23,7 +45,7 @@ export class SearchEventsHandler extends BaseToolHandler {
         let text = `Found ${events.length} event(s) matching your search:\n\n`;
         
         events.forEach((event, index) => {
-            const eventDetails = formatEventWithDetails(event, validArgs.calendarId);
+            const eventDetails = formatEventWithDetails(event, args.calendarId);
             text += `${index + 1}. ${eventDetails}\n\n`;
         });
         
@@ -37,7 +59,7 @@ export class SearchEventsHandler extends BaseToolHandler {
 
     private async searchEvents(
         client: OAuth2Client,
-        args: SearchEventsInput
+        args: SearchEventsArgs
     ): Promise<calendar_v3.Schema$Event[]> {
         try {
             const calendar = this.getCalendar(client);

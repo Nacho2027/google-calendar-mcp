@@ -1,7 +1,7 @@
 {
   "name": "@nacho2027/google-calendar-mcp-multi",
-  "version": "2.0.0",
-  "description": "Multi-user Google Calendar MCP Server with PostgreSQL storage and SSE transport for ContextForge integration",
+  "version": "3.0.0",
+  "description": "Simplified Google Calendar MCP Server with 4 consolidated tools for AI assistants - optimized for reduced cognitive load",
   "type": "module",
   "bin": {
     "google-calendar-mcp": "build/index.js",
@@ -39,7 +39,7 @@
   "scripts": {
     "start": "node build/index-multi.js",
     "start:single": "node build/index.js",
-    "build": "node scripts/build.js && tsc -p tsconfig.multi.json",
+    "build": "node scripts/build.js",
     "build:multi": "tsc -p tsconfig.multi.json",
     "auth": "node build/auth-server.js",
     "dev": "node scripts/dev.js",

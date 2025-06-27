@@ -1,17 +1,48 @@
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { OAuth2Client } from "google-auth-library";
-import { CreateEventInput } from "../../tools/registry.js";
 import { BaseToolHandler } from "./BaseToolHandler.js";
 import { calendar_v3 } from 'googleapis';
 import { formatEventWithDetails } from "../utils.js";
 import { createTimeObject } from "../utils/datetime.js";
 
+interface CreateEventArgs {
+  calendarId: string;
+  summary: string;
+  description?: string;
+  start: string;
+  end: string;
+  timeZone?: string;
+  location?: string;
+  attendees?: Array<{ email: string }>;
+  colorId?: string;
+  reminders?: {
+    useDefault: boolean;
+    overrides?: Array<{ method: "email" | "popup"; minutes: number }>;
+  };
+  recurrence?: string[];
+  access_token: string;
+  refresh_token?: string;
+  client_id: string;
+  client_secret: string;
+}
+
 export class CreateEventHandler extends BaseToolHandler {
-    async runTool(args: any, oauth2Client: OAuth2Client): Promise<CallToolResult> {
-        const validArgs = args as CreateEventInput;
-        const event = await this.createEvent(oauth2Client, validArgs);
+    async runTool(args: CreateEventArgs, oauth2Client: OAuth2Client | null = null): Promise<CallToolResult> {
+        // Create OAuth2Client from provided tokens (stateless)
+        const oAuth2Client = new OAuth2Client(
+            args.client_id,
+            args.client_secret
+        );
         
-        const eventDetails = formatEventWithDetails(event, validArgs.calendarId);
+        // Set credentials from provided tokens
+        oAuth2Client.setCredentials({
+            access_token: args.access_token,
+            refresh_token: args.refresh_token
+        });
+        
+        const event = await this.createEvent(oAuth2Client, args);
+        
+        const eventDetails = formatEventWithDetails(event, args.calendarId);
         const text = `Event created successfully!\n\n${eventDetails}`;
         
         return {
@@ -24,7 +55,7 @@ export class CreateEventHandler extends BaseToolHandler {
 
     private async createEvent(
         client: OAuth2Client,
-        args: CreateEventInput
+        args: CreateEventArgs
     ): Promise<calendar_v3.Schema$Event> {
         try {
             const calendar = this.getCalendar(client);

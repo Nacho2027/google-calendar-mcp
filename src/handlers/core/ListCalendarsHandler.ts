@@ -3,9 +3,28 @@ import { OAuth2Client } from "google-auth-library";
 import { BaseToolHandler } from "./BaseToolHandler.js";
 import { calendar_v3 } from "googleapis";
 
+interface ListCalendarsArgs {
+  access_token: string;
+  refresh_token?: string;
+  client_id: string;
+  client_secret: string;
+}
+
 export class ListCalendarsHandler extends BaseToolHandler {
-    async runTool(_: any, oauth2Client: OAuth2Client): Promise<CallToolResult> {
-        const calendars = await this.listCalendars(oauth2Client);
+    async runTool(args: ListCalendarsArgs, oauth2Client: OAuth2Client | null = null): Promise<CallToolResult> {
+        // Create OAuth2Client from provided tokens (stateless)
+        const oAuth2Client = new OAuth2Client(
+            args.client_id,
+            args.client_secret
+        );
+        
+        // Set credentials from provided tokens
+        oAuth2Client.setCredentials({
+            access_token: args.access_token,
+            refresh_token: args.refresh_token
+        });
+        
+        const calendars = await this.listCalendars(oAuth2Client);
         return {
             content: [{
                 type: "text", // This MUST be a string literal

@@ -1,5 +1,5 @@
 export interface TransportConfig {
-  type: 'stdio' | 'http';
+  type: 'stdio' | 'http' | 'sse';
   port?: number;
   host?: string;
 }
@@ -13,7 +13,7 @@ export function parseArgs(args: string[]): ServerConfig {
   // Start with environment variables as base config
   const config: ServerConfig = {
     transport: {
-      type: (process.env.TRANSPORT as 'stdio' | 'http') || 'stdio',
+      type: (process.env.TRANSPORT as 'stdio' | 'http' | 'sse') || 'stdio',
       port: process.env.PORT ? parseInt(process.env.PORT, 10) : 3000,
       host: process.env.HOST || '127.0.0.1'
     },
@@ -26,7 +26,7 @@ export function parseArgs(args: string[]): ServerConfig {
     switch (arg) {
       case '--transport':
         const transport = args[++i];
-        if (transport === 'stdio' || transport === 'http') {
+        if (transport === 'stdio' || transport === 'http' || transport === 'sse') {
           config.transport.type = transport;
         }
         break;
@@ -46,14 +46,14 @@ Google Calendar MCP Server
 Usage: node build/index.js [options]
 
 Options:
-  --transport <type>        Transport type: stdio (default) | http
+  --transport <type>        Transport type: stdio (default) | http | sse
   --port <number>          Port for HTTP transport (default: 3000)
   --host <string>          Host for HTTP transport (default: 127.0.0.1)
   --debug                  Enable debug logging
   --help                   Show this help message
 
 Environment Variables:
-  TRANSPORT               Transport type: stdio | http
+  TRANSPORT               Transport type: stdio | http | sse
   PORT                   Port for HTTP transport
   HOST                   Host for HTTP transport
   DEBUG                  Enable debug logging (true/false)
