@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { createServer } from 'http';
 import cors from 'cors';
@@ -26,12 +26,12 @@ export interface SSETransportConfig {
 
 export class SSETransportHandler {
   private app: express.Application;
-  private server: Server;
+  private server: McpServer;
   private httpServer: any;
   private config: SSETransportConfig;
   private transports: { [sessionId: string]: SSEServerTransport } = {};
 
-  constructor(server: Server, config: SSETransportConfig = {}) {
+  constructor(server: McpServer, config: SSETransportConfig = {}) {
     this.server = server;
     this.config = {
       port: config.port || parseInt(process.env.PORT || '8085'),

@@ -19,10 +19,10 @@ import { OAuthSetupHandler } from "../handlers/core/OAuthSetupHandler.js";
 
 // OAuth credentials schema for stateless operation
 const OAuthCredentialsSchema = z.object({
-  access_token: z.string().describe("Google OAuth access token"),
+  access_token: z.string().optional().describe("Google OAuth access token"),
   refresh_token: z.string().optional().describe("Google OAuth refresh token"),
-  client_id: z.string().describe("Google OAuth client ID"),
-  client_secret: z.string().describe("Google OAuth client secret")
+  client_id: z.string().optional().describe("Google OAuth client ID"),
+  client_secret: z.string().optional().describe("Google OAuth client secret")
 });
 
 // User context schema that will be added to all tools

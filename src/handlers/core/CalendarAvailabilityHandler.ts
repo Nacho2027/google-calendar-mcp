@@ -24,6 +24,17 @@ export class CalendarAvailabilityHandler extends BaseToolHandler {
   private freeBusyHandler = new FreeBusyEventHandler();
 
   async runTool(args: CalendarAvailabilityArgs, oauth2Client: OAuth2Client | null = null): Promise<CallToolResult> {
+    // Create OAuth2Client from provided credentials
+    const client = new OAuth2Client(
+      args.client_id,
+      args.client_secret
+    );
+    
+    client.setCredentials({
+      access_token: args.access_token,
+      refresh_token: args.refresh_token
+    });
+    
     // Validate required parameters
     if (!args.calendars || args.calendars.length === 0) {
       throw new McpError(
@@ -40,7 +51,7 @@ export class CalendarAvailabilityHandler extends BaseToolHandler {
     }
 
     // Get the basic free/busy information
-    const freeBusyResult = await this.freeBusyHandler.runTool(args, oauth2Client);
+    const freeBusyResult = await this.freeBusyHandler.runTool(args, client);
     
     // If suggestFreeSlots is not requested, return the standard free/busy result
     if (!args.suggestFreeSlots) {

@@ -55,6 +55,17 @@ export class CalendarModifyHandler extends BaseToolHandler {
   private deleteEventHandler = new DeleteEventHandler();
 
   async runTool(args: CalendarModifyArgs, oauth2Client: OAuth2Client | null = null): Promise<CallToolResult> {
+    // Create OAuth2Client from provided credentials
+    const client = new OAuth2Client(
+      args.client_id,
+      args.client_secret
+    );
+    
+    client.setCredentials({
+      access_token: args.access_token,
+      refresh_token: args.refresh_token
+    });
+    
     // Validate calendarId is provided
     if (!args.calendarId) {
       throw new McpError(
@@ -82,7 +93,14 @@ export class CalendarModifyHandler extends BaseToolHandler {
           );
         }
         
-        return await this.createEventHandler.runTool(createArgs, oauth2Client);
+        // Map CalendarModifyHandler args to CreateEventHandler args
+        const mappedCreateArgs = {
+          ...createArgs,
+          start: createArgs.startDateTime,
+          end: createArgs.endDateTime
+        };
+        
+        return await this.createEventHandler.runTool(mappedCreateArgs, client);
       }
       
       case "update": {
@@ -108,7 +126,14 @@ export class CalendarModifyHandler extends BaseToolHandler {
           );
         }
         
-        return await this.updateEventHandler.runTool(updateArgs, oauth2Client);
+        // Map CalendarModifyHandler args to UpdateEventHandler args
+        const mappedUpdateArgs = {
+          ...updateArgs,
+          start: updateArgs.startDateTime,
+          end: updateArgs.endDateTime
+        };
+        
+        return await this.updateEventHandler.runTool(mappedUpdateArgs, client);
       }
       
       case "delete": {
@@ -122,7 +147,7 @@ export class CalendarModifyHandler extends BaseToolHandler {
           );
         }
         
-        return await this.deleteEventHandler.runTool(deleteArgs, oauth2Client);
+        return await this.deleteEventHandler.runTool(deleteArgs, client);
       }
       
       default:

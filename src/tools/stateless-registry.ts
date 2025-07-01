@@ -1,7 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 
 // Import simplified handlers  
 import { CalendarManageHandler } from "../handlers/core/CalendarManageHandler.js";
@@ -11,10 +9,10 @@ import { CalendarConnectHandler } from "../handlers/core/CalendarConnectHandler.
 
 // OAuth credentials schema - used by all tools
 const OAuthCredentialsSchema = z.object({
-  access_token: z.string().describe("Google OAuth access token"),
+  access_token: z.string().optional().describe("Google OAuth access token"),
   refresh_token: z.string().optional().describe("Google OAuth refresh token"),
-  client_id: z.string().describe("Google OAuth client ID"),
-  client_secret: z.string().describe("Google OAuth client secret")
+  client_id: z.string().optional().describe("Google OAuth client ID"),
+  client_secret: z.string().optional().describe("Google OAuth client secret")
 });
 
 // Define simplified tool schemas with OAuth credentials
@@ -106,6 +104,8 @@ export const StatelessToolSchemas = {
 
 export class StatelessToolRegistry {
   static registerAll(server: McpServer): void {
+    console.log('🔧 Registering stateless tools...');
+    
     // Tool descriptions for better clarity
     const toolDescriptions: Record<string, string> = {
       'calendar-manage': 'Read and search calendar information (calendars, events, colors)',
@@ -114,13 +114,23 @@ export class StatelessToolRegistry {
       'calendar-connect': 'Verify Google Calendar connection and OAuth status'
     };
 
+    // Create combined schema shapes using the .shape property (Zod merged schemas)
+    const inputSchemas = {
+      'calendar-manage': StatelessToolSchemas['calendar-manage'].shape,
+      'calendar-modify': StatelessToolSchemas['calendar-modify'].shape,
+      'calendar-availability': StatelessToolSchemas['calendar-availability'].shape,
+      'calendar-connect': StatelessToolSchemas['calendar-connect'].shape
+    };
+
     // Register each tool individually
     Object.entries(StatelessToolSchemas).forEach(([name, schema]) => {
+      console.log(`🔧 Registering tool: ${name}`);
+      
       server.registerTool(
         name,
         {
           description: toolDescriptions[name] || `Google Calendar tool: ${name}`,
-          inputSchema: zodToJsonSchema(schema)
+          inputSchema: inputSchemas[name as keyof typeof inputSchemas]
         },
         async (args: any) => {
           try {
@@ -130,13 +140,13 @@ export class StatelessToolRegistry {
             // Route to the appropriate handler
             switch (name) {
               case 'calendar-manage':
-                return await new CalendarManageHandler().handle(validatedArgs);
+                return await new CalendarManageHandler().runTool(validatedArgs);
               case 'calendar-modify':
-                return await new CalendarModifyHandler().handle(validatedArgs);
+                return await new CalendarModifyHandler().runTool(validatedArgs);
               case 'calendar-availability':
-                return await new CalendarAvailabilityHandler().handle(validatedArgs);
+                return await new CalendarAvailabilityHandler().runTool(validatedArgs);
               case 'calendar-connect':
-                return await new CalendarConnectHandler().handle(validatedArgs);
+                return await new CalendarConnectHandler().runTool(validatedArgs);
               default:
                 throw new Error(`Unknown tool: ${name}`);
             }
@@ -144,7 +154,7 @@ export class StatelessToolRegistry {
             return {
               content: [
                 {
-                  type: "text",
+                  type: "text" as const,
                   text: `Error executing tool ${name}: ${error instanceof Error ? error.message : String(error)}`
                 }
               ],
@@ -153,6 +163,8 @@ export class StatelessToolRegistry {
           }
         }
       );
+      console.log(`✅ Tool ${name} registered successfully`);
     });
+    console.log(`🎯 All ${Object.keys(StatelessToolSchemas).length} tools registered!`);
   }
 }

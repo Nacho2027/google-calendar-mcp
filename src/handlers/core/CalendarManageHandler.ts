@@ -51,10 +51,21 @@ export class CalendarManageHandler extends BaseToolHandler {
   private listColorsHandler = new ListColorsHandler();
 
   async runTool(args: CalendarManageArgs, oauth2Client: OAuth2Client | null = null): Promise<CallToolResult> {
+    // Create OAuth2Client from provided credentials
+    const client = new OAuth2Client(
+      args.client_id,
+      args.client_secret
+    );
+    
+    client.setCredentials({
+      access_token: args.access_token,
+      refresh_token: args.refresh_token
+    });
+    
     // Route to appropriate handler based on operation
     switch (args.operation) {
       case "list-calendars":
-        return await this.listCalendarsHandler.runTool(args, oauth2Client);
+        return await this.listCalendarsHandler.runTool(args, client);
       
       case "list-events": {
         const listArgs = args as ListEventsArgs;
@@ -63,7 +74,7 @@ export class CalendarManageHandler extends BaseToolHandler {
         return await this.listEventsHandler.runTool({
           ...listArgs,
           calendarId
-        }, oauth2Client);
+        }, client);
       }
       
       case "search-events": {
@@ -85,11 +96,11 @@ export class CalendarManageHandler extends BaseToolHandler {
           // Provide defaults for required time parameters if not specified
           timeMin: searchArgs.timeMin || new Date().toISOString(),
           timeMax: searchArgs.timeMax || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
-        }, oauth2Client);
+        }, client);
       }
       
       case "list-colors":
-        return await this.listColorsHandler.runTool(args, oauth2Client);
+        return await this.listColorsHandler.runTool(args, client);
       
       default:
         throw new McpError(

@@ -17,11 +17,15 @@ async function main() {
     // Parse command line arguments
     const config = parseArgs(process.argv.slice(2));
     
+    console.log('🚀 Starting Google Calendar Stateless MCP Server initialization...');
+    console.log('✅ OAuth Token Injection Architecture - credentials passed per request');
+    
     // Create and initialize the stateless server (no OAuth during startup)
     const server = new StatelessGoogleCalendarMcpServer(config);
     await server.initialize();
     
     // Start the server with the appropriate transport
+    console.log('🌐 Starting transport...');
     await server.start();
 
   } catch (error: unknown) {

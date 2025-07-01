@@ -24,15 +24,26 @@ export class StatelessGoogleCalendarMcpServer {
   }
 
   async initialize(): Promise<void> {
+    console.log('🎯 Starting Google Calendar Stateless MCP Server...');
+    
     // 1. Set up Stateless Tool Definitions (no OAuth initialization required)
+    console.log('📋 Registering stateless tools...');
     this.registerStatelessTools();
 
     // 2. Set up Graceful Shutdown
     this.setupGracefulShutdown();
+    console.log('✅ Initialization complete!');
   }
 
   private registerStatelessTools(): void {
-    StatelessToolRegistry.registerAll(this.server);
+    try {
+      console.log('🔧 About to call StatelessToolRegistry.registerAll...');
+      StatelessToolRegistry.registerAll(this.server);
+      console.log('✅ StatelessToolRegistry.registerAll completed');
+    } catch (error) {
+      console.error('❌ Error in registerStatelessTools:', error);
+      throw error;
+    }
   }
 
   async start(): Promise<void> {
